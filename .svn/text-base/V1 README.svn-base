@@ -1,0 +1,9 @@
+V1 README:
+
+Currently, we have delay on the robot to prevent filling the glassline up with too much glass, as we are still having
+some problems when we try to increase throughput too much (for some reason popups don't pass glass on to the next conveyor).
+Otherwise, everything seems to work. You should observe that conveyors stop before popups that are going up
+when there is glass on their last sensors, and conveyors will stop due to the truck leaving. We observed great variability
+in the speed of the glassline when we ran it on different people's machines, and this sometimes affected the kinds of 
+problems we would observe. On one machine, for example, sometimes when the popup hands off glass to the next conveyor,
+it appears to get stuck. All of these issues should be resolved by v2.

@@ -1,0 +1,218 @@
+
+package gui.panels.subcontrolpanels;
+
+import glassline.Glass.GlassShape;
+import glassline.Glass.WorkStation;
+import glassline.interfaces.Workstation;
+import gui.panels.ControlPanel;
+import gui.panels.DisplayPanel;
+
+import java.awt.Color;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JTextField;
+import javax.swing.border.TitledBorder;
+
+import transducer.TChannel;
+import transducer.TEvent;
+import transducer.TReceiver;
+
+/**
+ * The GlassSelectPanel class contains buttons allowing the user to select what
+ * type of glass to produce.
+ */
+@SuppressWarnings("serial")
+public class GlassSelectPanel extends JPanel implements TReceiver
+{
+	/** The ControlPanel this is linked to */
+	private ControlPanel parent;
+
+	JLabel glassQueueLabel;
+	Map<GlassShape, JRadioButton> recipeShape = new HashMap<GlassShape, JRadioButton>();
+	Map<WorkStation, JCheckBox> recipeWorkstations = new HashMap<WorkStation, JCheckBox>();
+
+
+	/**
+	 * Creates a new GlassSelect and links it to the control panel
+	 * @param cp
+	 *        the ControlPanel linked to it
+	 */
+	public GlassSelectPanel(ControlPanel cp)
+	{
+		cp.getTransducer().register(this, TChannel.CONTROL_PANEL);
+
+		parent = cp;
+
+		// Recipe panel
+		JPanel recipePanel = new JPanel();
+		recipePanel.setLayout(new FlowLayout(20, 24, FlowLayout.LEFT));
+		recipePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createMatteBorder(3, 0, 0, 0, Color.BLACK), "WORKSTATIONS", TitledBorder.CENTER, TitledBorder.TOP));
+
+		recipeWorkstations.put(WorkStation.CrossSeamer, new JCheckBox("CrossSeamer"));
+		recipeWorkstations.put(WorkStation.Drill, new JCheckBox("Drill"));
+		recipeWorkstations.put(WorkStation.Grinder, new JCheckBox("Grinder"));
+
+		recipePanel.add(recipeWorkstations.get(WorkStation.Drill));
+		recipePanel.add(recipeWorkstations.get(WorkStation.CrossSeamer));
+		recipePanel.add(recipeWorkstations.get(WorkStation.Grinder));
+
+		this.add(recipePanel);
+
+		// Shape panel
+		JPanel shapePanel = new JPanel();
+		shapePanel.setLayout(new FlowLayout(20, 30, FlowLayout.LEFT));
+		shapePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createMatteBorder(3, 0, 3, 0, Color.BLACK), "SHAPE", TitledBorder.CENTER, TitledBorder.TOP));
+
+		JRadioButton squareButton = new JRadioButton("Square");
+		JRadioButton circleButton = new JRadioButton("Circle");
+		JRadioButton triangleButton = new JRadioButton("Triangle");
+
+		// Set default
+		squareButton.setSelected(true);
+
+		ButtonGroup buttonGroup = new ButtonGroup();
+		buttonGroup.add(squareButton);
+		buttonGroup.add(circleButton);
+		buttonGroup.add(triangleButton);
+
+		recipeShape.put(GlassShape.Square, squareButton);
+		recipeShape.put(GlassShape.Circle, circleButton);
+		recipeShape.put(GlassShape.Triangle, triangleButton);
+
+		shapePanel.add(squareButton);
+		shapePanel.add(circleButton);
+		shapePanel.add(triangleButton);
+
+		this.add(shapePanel);
+		JButton startGlassBtn = new JButton("Start Glass");
+		glassQueueLabel = new JLabel("Glass Queue: 0");
+		JButton startMoreGlassBtn = new JButton("Start 10 Glass");
+		this.add(startGlassBtn);
+		this.add(startMoreGlassBtn);
+		startMoreGlassBtn.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent ae){
+				ArrayList<WorkStation> workstations = new ArrayList<WorkStation>();
+				for (WorkStation station : WorkStation.values()) {
+					if (recipeWorkstations.get(station).isSelected()) workstations.add(station);
+				}
+
+				// Determine shape from radio buttons
+				GlassShape selectedShape = null;
+				for (GlassShape shape : GlassShape.values()) {
+					if (recipeShape.get(shape).isSelected()) selectedShape = shape;
+				}
+				for(int i = 0; i < 10; i++){
+					DisplayPanel.factory.startGlass(selectedShape, workstations);
+				}
+			}
+		});
+		JButton startHellaRandomGlassBtn = new JButton("Start 50 Random Glass");
+		this.add(startHellaRandomGlassBtn);
+		final Random gen = new Random();
+		startHellaRandomGlassBtn.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				for(int i = 0; i < 50; i++){
+					ArrayList<WorkStation> workstations = new ArrayList<WorkStation>();
+					for(int j = 0; j < 3; j++){	
+						int randWorkstation = gen.nextInt(2);
+						if(randWorkstation == 1){
+							workstations.add((WorkStation)recipeWorkstations.keySet().toArray()[j]);
+						}
+					}
+					int randShape = gen.nextInt(3);
+					GlassShape shape = null;
+					switch(randShape){
+					case 1:
+						shape = GlassShape.Circle;
+						break;
+					case 2:
+						shape = GlassShape.Triangle;
+						break;
+					default:
+						shape = GlassShape.Square;
+					}
+					DisplayPanel.factory.startGlass(shape, workstations);
+					for(WorkStation w : recipeWorkstations.keySet()){
+						recipeWorkstations.get(w).setEnabled(true);
+					}
+				}
+			}
+			
+		});
+		JButton startHellaGlassBtn = new JButton("Start 300 Glass");
+		this.add(startHellaGlassBtn);
+		startHellaGlassBtn.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				ArrayList<WorkStation> workstations = new ArrayList<WorkStation>();
+				for (WorkStation station : WorkStation.values()) {
+					if (recipeWorkstations.get(station).isSelected()) workstations.add(station);
+				}
+
+				// Determine shape from radio buttons
+				GlassShape selectedShape = null;
+				for (GlassShape shape : GlassShape.values()) {
+					if (recipeShape.get(shape).isSelected()) selectedShape = shape;
+				}
+				for(int i = 0; i < 300; i++){
+					DisplayPanel.factory.startGlass(selectedShape, workstations);
+				}
+			}
+
+		});
+		startGlassBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ae) {
+
+				// Determine workstations from the checkboxes.
+				ArrayList<WorkStation> workstations = new ArrayList<WorkStation>();
+				for (WorkStation station : WorkStation.values()) {
+					if (recipeWorkstations.get(station).isSelected()) workstations.add(station);
+				}
+
+				// Determine shape from radio buttons
+				GlassShape selectedShape = null;
+				for (GlassShape shape : GlassShape.values()) {
+					if (recipeShape.get(shape).isSelected()) selectedShape = shape;
+				}
+
+				DisplayPanel.factory.startGlass(selectedShape, workstations);
+			}
+		});
+		this.add(glassQueueLabel);
+		randomSeed.setEditable(false);
+	}
+	JTextField randomSeed = new JTextField("Random Seed will go here");
+	/**
+	 * Returns the parent panel
+	 * @return the parent panel
+	 */
+	public ControlPanel getGuiParent()
+	{
+		return parent;
+	}
+
+	@Override
+	public void eventFired(TChannel channel, TEvent event, Object[] args) {
+		if (channel == TChannel.CONTROL_PANEL) {
+			if (event == TEvent.GLASS_QUEUE_UPDATED) {
+				glassQueueLabel.setText("Glass in queue: " + args[0]);
+			}
+		}
+	}
+}

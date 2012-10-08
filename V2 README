@@ -1,0 +1,4 @@
+As far as we know, there is only one case our factory cannot handle: occasionally, a conveyor will send glass to a popup
+at the same time that the popup starts moving up because a workstation called it. This causes problems in the popup agent. We
+were not able to fix this.  However, this problem happens pretty infrequently (once every couple 100 glasses when running
+random glass recipes). Otherwise, our factory handles everything.
